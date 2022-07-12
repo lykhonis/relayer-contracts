@@ -1,0 +1,25 @@
+name: Verify
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - main
+
+jobs:
+  verify:
+    strategy:
+      matrix:
+        runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest 
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install
+      run: yarn
+    - name: Lint
+      run: yarn lint
+    - name: Build
+      run: yarn build
+    - name: Test
+      run: yarn test
