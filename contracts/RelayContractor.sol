@@ -49,7 +49,9 @@ contract RelayContractor is IRelayContractor, Initializable, OwnableUnset {
     }
 
     function quota(address profile) external view returns (uint256 used, uint256 remaining) {
-        remaining = _rewardToken.allowance(profile, address(this));
+        uint256 allowance = _rewardToken.allowance(profile, address(this));
+        uint256 balance = _rewardToken.balanceOf(profile);
+        remaining = allowance > balance ? balance : allowance;
         used = _quotaUsed[profile];
     }
 }

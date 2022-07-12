@@ -20,8 +20,6 @@ contract StakedToken is ERC20, OwnableUnset, ReentrancyGuard {
         _setOwner(owner);
     }
 
-    function submitBalances(uint256 totalRewards) external {}
-
     function stake() external payable nonReentrant {
         require(msg.value > 0, "Invalid amount");
         require(IERC165(msg.sender).supportsInterface(_INTERFACEID_LSP0), "Invalid recipient");

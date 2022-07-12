@@ -1,4 +1,5 @@
 require('@nomiclabs/hardhat-waffle')
+require('@nomiclabs/hardhat-etherscan')
 require('@openzeppelin/hardhat-upgrades')
 require('hardhat-gas-reporter')
 require('hardhat-deploy')
@@ -23,12 +24,12 @@ dotenv.config()
 
 const sharedNetworkConfig = {}
 
-const { OWNER_KEY } = process.env
+const { OWNER_KEY, ORACLES_KEY } = process.env
 
-if (OWNER_KEY) {
-  sharedNetworkConfig.accounts = [OWNER_KEY]
+if (OWNER_KEY && ORACLES_KEY) {
+  sharedNetworkConfig.accounts = [OWNER_KEY, ORACLES_KEY]
 } else {
-  throw new Error('No owner key is found. Owner is required to deploy contracts')
+  throw new Error('No key is found. Keys are required to deploy contracts')
 }
 
 const config = {
@@ -51,6 +52,7 @@ const config = {
   },
   namedAccounts: {
     owner: 0,
+    oracles: 1,
   },
   gasReporter: {
     src: './contracts',

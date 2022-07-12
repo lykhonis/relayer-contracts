@@ -56,4 +56,6 @@ OWNER_KEY=[Owner-Private-Key]
 
 | network | contract | address |
 | ---- | ----------- | ------- |
-| l16 | RelayContractor | TBD |
+| l16 | StakedToken | 0x8B7a2d88c47ec68E34Fad73D33F94d281Ef073ce |
+| l16 | RewardToken | 0x6D2F97442F43b740bD5b1741f5dAC39ee6A359FD |
+| l16 | RelayContractor | 0x7630d92761888a1dF63d11F891aff7B621a924C5 |
