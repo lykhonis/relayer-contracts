@@ -8,20 +8,20 @@ const deploy = async ({
   const { owner } = await getNamedAccounts()
   const { maxFeePerGas, maxPriorityFeePerGas } = await ethers.provider.getFeeData()
 
-  const { address } = await deploy('UniversalPageName', {
+  const { address } = await deploy('RewardToken', {
     from: owner,
     args: [
       owner,
-      process.env.BENEFICIARY_ADDRESS,
-      'Universal Page Name',
-      'UPN',
+      process.env.ORACLES_ADDRESS,
+      'Reward Lukso',
+      'rLYX',
     ],
     maxFeePerGas,
     maxPriorityFeePerGas,
     log: true,
   })
 
-  console.log(`UniversalPageName: ${address}`)
+  console.log(`RewardToken: ${address}`)
 }
 
 module.exports = deploy
