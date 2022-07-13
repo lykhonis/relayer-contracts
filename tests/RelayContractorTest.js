@@ -83,7 +83,7 @@ describe('RelayContractor', () => {
   it('should not submit usage', async () => {
     await expect(contract.connect(alice)
       .submitUsage(aliceProfile.address, ethers.utils.parseEther('0.02')))
-      .to.be.revertedWith('Not oracle')
+      .to.be.revertedWith('not the owner')
   })
 
   it('should submit usage', async () => {
@@ -91,7 +91,7 @@ describe('RelayContractor', () => {
     await rewardTokenContract.connect(oracles).submitRewards(aliceProfile.address, ethers.utils.parseEther('3.42'))
     expect(await rewardTokenContract.balanceOf(aliceProfile.address))
       .to.be.eq(ethers.utils.parseEther('3.42'))
-    await contract.connect(oracles)
+    await contract.connect(owner)
       .submitUsage(aliceProfile.address, ethers.utils.parseEther('0.02'))
     expect(await rewardTokenContract.balanceOf(aliceProfile.address))
       .to.be.eq(ethers.utils.parseEther('3.4'))
@@ -108,7 +108,7 @@ describe('RelayContractor', () => {
       ethers.utils.parseEther('0'),
       ethers.utils.parseEther('2.22'),
     ])
-    await contract.connect(oracles)
+    await contract.connect(owner)
       .submitUsage(aliceProfile.address, ethers.utils.parseEther('0.22'))
     expect(await contract.quota(aliceProfile.address)).to.be.deep.eq([
       ethers.utils.parseEther('0.22'),

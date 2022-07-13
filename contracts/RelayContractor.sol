@@ -43,7 +43,7 @@ contract RelayContractor is IRelayContractor, Initializable, OwnableUnset {
         emit OraclesChanged(previous, newOracles);
     }
 
-    function submitUsage(address profile, uint256 amount) external onlyOracles {
+    function submitUsage(address profile, uint256 amount) external onlyOwner {
         _quotaUsed[profile] += amount;
         _rewardToken.transferFrom(profile, owner(), amount);
     }
