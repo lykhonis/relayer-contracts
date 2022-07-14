@@ -118,13 +118,15 @@ describe('RelayContractor', () => {
     const ownerBalanceStart = await rewardTokenContract.balanceOf(owner.address)
 
     const gasPrice = await ethers.provider.getGasPrice()
-    await contract.connect(owner).executeRelayCall(
-      aliceOwner.address,
-      gasPrice,
-      signature,
-      nonce,
-      data,
-    )
+    await expect(
+      contract.connect(owner).executeRelayCall(
+        aliceOwner.address,
+        gasPrice,
+        signature,
+        nonce,
+        data,
+      ),
+    ).to.emit(contract, 'ExecutedRelayCall')
 
     const quota = await contract.quota(aliceProfile.address)
     expect(quota.used).to.be.gt(0)

@@ -10,6 +10,8 @@ import {IRelayContractor} from "./IRelayContractor.sol";
 contract RelayContractor is IRelayContractor, Initializable, OwnableUnset {
     uint256 private constant _BASIS_POINTS = 100_000;
 
+    event ExecutedRelayCall(address indexed profile, address indexed keyManager, uint256 gasUsed, uint256 gasPrice);
+
     IERC20 private _rewardToken;
     uint256 private _fee;
     mapping(address => uint256) private _quotaUsed;
@@ -76,5 +78,6 @@ contract RelayContractor is IRelayContractor, Initializable, OwnableUnset {
         uint256 feeService = (feeUsed * _fee) / _BASIS_POINTS;
         _quotaUsed[profile] += feeUsed;
         _rewardToken.transferFrom(profile, owner(), feeUsed + feeService);
+        emit ExecutedRelayCall(profile, keyManager, gasUsed, gasPrice);
     }
 }
