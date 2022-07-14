@@ -18,6 +18,7 @@ const deploy = async ({
         methodName: 'initialize',
         args: [
           owner,
+          process.env.ORACLES_ADDRESS,
           RewardToken.address,
           10_000 /* 10% */,
         ],

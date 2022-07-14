@@ -4,26 +4,40 @@ pragma solidity ^0.8.9;
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {OwnableUnset} from "@erc725/smart-contracts/contracts/custom/OwnableUnset.sol";
-import {ILSP6KeyManager} from "@lukso/lsp-smart-contracts/contracts/LSP6KeyManager/ILSP6KeyManager.sol";
 import {IRelayContractor} from "./IRelayContractor.sol";
 
 contract RelayContractor is IRelayContractor, Initializable, OwnableUnset {
     uint256 private constant _BASIS_POINTS = 100_000;
 
-    event ExecutedRelayCall(address indexed profile, address indexed keyManager, uint256 gasUsed, uint256 gasPrice);
+    event OraclesChanged(address previous, address current);
 
     IERC20 private _rewardToken;
     uint256 private _fee;
+    address private _oracles;
     mapping(address => uint256) private _quotaUsed;
+    mapping(bytes32 => address) private _transactions;
+
+    modifier onlyOracles() {
+        require(msg.sender == _oracles, "Not oracle");
+        _;
+    }
 
     function initialize(
         address owner,
+        address oracles,
         address rewardToken,
         uint256 fee_
     ) external initializer {
         _setOwner(owner);
         _fee = fee_;
+        _oracles = oracles;
         _rewardToken = IERC20(rewardToken);
+    }
+
+    function setOracles(address newOracles) external onlyOwner {
+        address previous = _oracles;
+        _oracles = newOracles;
+        emit OraclesChanged(previous, newOracles);
     }
 
     function setRewardToken(address newRewardToken) external onlyOwner {
@@ -50,34 +64,18 @@ contract RelayContractor is IRelayContractor, Initializable, OwnableUnset {
         used = _quotaUsed[profile];
     }
 
-    function executeRelayCall(
-        address keyManager,
-        uint256 gasPrice,
-        bytes memory signature,
-        uint256 nonce,
-        bytes calldata payload
-    ) external payable onlyOwner returns (bool success, bytes memory result) {
-        address profile = ILSP6KeyManager(keyManager).target();
-        uint256 beginGas = gasleft();
-        try ILSP6KeyManager(keyManager).executeRelayCall(signature, nonce, payload) returns (
-            bytes memory relayCallResult
-        ) {
-            success = true;
-            result = relayCallResult;
-        } catch Error(string memory reason) {
-            success = false;
-            result = bytes(reason);
-        } catch Panic(uint256) {
-            success = false;
-        } catch (bytes memory reason) {
-            success = false;
-            result = reason;
-        }
-        uint256 gasUsed = beginGas - gasleft();
-        uint256 feeUsed = gasUsed * gasPrice;
-        uint256 feeService = (feeUsed * _fee) / _BASIS_POINTS;
-        _quotaUsed[profile] += feeUsed;
-        _rewardToken.transferFrom(profile, owner(), feeUsed + feeService);
-        emit ExecutedRelayCall(profile, keyManager, gasUsed, gasPrice);
+    function execute(address profile, bytes32 transaction) external onlyOwner {
+        require(_transactions[transaction] == address(0), "Already executed");
+        _transactions[transaction] = profile;
+        emit Executed(profile, transaction);
+    }
+
+    function submitUsage(bytes32 transaction, uint256 used) external onlyOracles {
+        address profile = _transactions[transaction];
+        require(profile != address(0), "Invalid transaction");
+        uint256 serviceFee = (used * _fee) / _BASIS_POINTS;
+        _quotaUsed[profile] += used;
+        _rewardToken.transferFrom(profile, owner(), used + serviceFee);
+        delete _transactions[transaction];
     }
 }

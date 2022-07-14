@@ -1,7 +1,7 @@
 const { solidity } = require('ethereum-waffle')
 const { expect } = require('chai').use(solidity)
 const { ethers, upgrades } = require('hardhat')
-const { deployProfile, encodeRelayCall } = require('../tools/common')
+const { deployProfile } = require('../tools/common')
 
 describe('RelayContractor', () => {
   let contract
@@ -52,6 +52,7 @@ describe('RelayContractor', () => {
     const contractFactory = await ethers.getContractFactory('RelayContractor')
     contract = await upgrades.deployProxy(contractFactory, [
       owner.address,
+      oracles.address,
       rewardTokenContract.address,
       fee,
     ])
@@ -72,6 +73,10 @@ describe('RelayContractor', () => {
       await contract.connect(owner).setFee(25_000 /* 25% */)
       expect(await contract.fee()).to.be.eq(25_000)
     })
+
+    it('should set oracles', async () => {
+      await contract.connect(owner).setOracles(alice.address)
+    })
   })
 
   it('should not set reward token', async () => {
@@ -84,7 +89,12 @@ describe('RelayContractor', () => {
       .to.be.revertedWith('not the owner')
   })
 
-  it('should execute relay call', async () => {
+  it('should not set oracles', async () => {
+    await expect(contract.connect(alice).setOracles(alice.address))
+      .to.be.revertedWith('not the owner')
+  })
+
+  it('should execute and spend', async () => {
     await approveRewardTokens(ethers.utils.parseEther('3.33'))
     expect(await contract.quota(aliceProfile.address)).to.be.deep.eq([
       ethers.utils.parseEther('0'),
@@ -97,42 +107,23 @@ describe('RelayContractor', () => {
       ethers.utils.parseEther('2.22'),
     ])
 
-    const { signature, nonce, data } = await encodeRelayCall(
-      aliceOwner,
-      alice,
-      aliceProfile.interface.encodeFunctionData('execute(uint256,address,uint256,bytes)',
-        [
-          0,
-          rewardTokenContract.address,
-          0,
-          rewardTokenContract.interface.encodeFunctionData(
-            'redeem(uint256)',
-            [
-              ethers.utils.parseEther('1'),
-            ],
-          ),
-        ],
-      ),
-    )
-
     const ownerBalanceStart = await rewardTokenContract.balanceOf(owner.address)
+    const transactionHash = ethers.utils.hexValue(ethers.utils.randomBytes(32))
 
-    const gasPrice = await ethers.provider.getGasPrice()
-    await expect(
-      contract.connect(owner).executeRelayCall(
-        aliceOwner.address,
-        gasPrice,
-        signature,
-        nonce,
-        data,
-      ),
-    ).to.emit(contract, 'ExecutedRelayCall')
+    await expect(contract.connect(owner).execute(aliceProfile.address, transactionHash))
+      .to.emit(contract, 'Executed').withArgs(aliceProfile.address, transactionHash)
 
-    const quota = await contract.quota(aliceProfile.address)
-    expect(quota.used).to.be.gt(0)
+    await contract.connect(oracles).submitUsage(transactionHash, ethers.utils.parseEther('0.02'))
+
+    const spend = ethers.utils.parseEther('0.02')
+      .add(ethers.utils.parseEther('0.02').mul(fee).div(basisPoints))
+
+    expect(await contract.quota(aliceProfile.address)).to.be.deep.eq([
+      ethers.utils.parseEther('0.02'),
+      ethers.utils.parseEther('2.22').sub(spend),
+    ])
 
     const ownerBalanceEnd = await rewardTokenContract.balanceOf(owner.address)
-    expect(ownerBalanceEnd.sub(ownerBalanceStart))
-      .to.be.eq(quota.used.add(quota.used.mul(fee).div(basisPoints)))
+    expect(ownerBalanceEnd.sub(ownerBalanceStart)).to.be.eq(spend)
   })
 })
