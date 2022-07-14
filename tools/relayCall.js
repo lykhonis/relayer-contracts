@@ -51,9 +51,9 @@ const main = async () => {
   const profileContract = new ethers.Contract(process.env.PROFILE_ADDRESS, UniversalProfile.abi, controller)
   const keyManagerContract = new ethers.Contract(process.env.KEYMANAGER_ADDRESS, LSP6KeyManager.abi, controller)
 
-  const relayContractAddress = '0x93D1B49d28763a83ADB54D0069b91BdDa264a50e'
+  const relayContractAddress = '0x924d83cbe940D7428Da125394E1978D18d037432'
 
-  // // approve spending
+  // approve spending
   // await keyManagerContract.execute(
   //   profileContract.interface.encodeFunctionData('execute(uint256,address,uint256,bytes)',
   //     [
