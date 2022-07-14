@@ -11,10 +11,11 @@ const main = async () => {
   const rewardToken = new ethers.Contract(
     '0x07eE2b1135654dC9b83eF72EEA15d1C32C902dD4',
     RewardToken.abi,
+    oracles,
   )
   await rewardToken.connect(oracles).submitRewards(
-    '0x...',
-    ethers.utils.parseEther('0.99'),
+    process.env.PROFILE_ADDRESS,
+    ethers.utils.parseEther('9.99'),
     {
       gasLimit: 100_000,
     },
