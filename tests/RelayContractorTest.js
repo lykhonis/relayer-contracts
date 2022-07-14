@@ -43,6 +43,7 @@ describe('RelayContractor', () => {
     rewardTokenContract = await rewardTokenContractFactory.connect(deployer).deploy(
       owner.address,
       oracles.address,
+      10000,
       'Reward Lukso',
       'rLYX',
     )

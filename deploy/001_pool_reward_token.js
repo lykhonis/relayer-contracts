@@ -13,6 +13,7 @@ const deploy = async ({
     args: [
       owner,
       process.env.ORACLES_ADDRESS,
+      8_050,
       'Reward Lukso',
       'rLYX',
     ],

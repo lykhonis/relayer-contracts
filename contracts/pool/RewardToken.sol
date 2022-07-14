@@ -12,6 +12,7 @@ contract RewardToken is ERC20, OwnableUnset, ReentrancyGuard {
     event RewardsRedeemed(address indexed account, uint256 amount);
 
     address private _oracles;
+    uint256 private _rate;
 
     modifier onlyOracles() {
         require(msg.sender == _oracles, "Not oracle");
@@ -21,11 +22,13 @@ contract RewardToken is ERC20, OwnableUnset, ReentrancyGuard {
     constructor(
         address owner,
         address oracles,
+        uint256 rate,
         string memory name,
         string memory symbol
     ) ERC20(name, symbol) {
         _setOwner(owner);
         _oracles = oracles;
+        _rate = rate;
     }
 
     function setOracles(address newOracles) external onlyOwner {
@@ -34,9 +37,17 @@ contract RewardToken is ERC20, OwnableUnset, ReentrancyGuard {
         emit OraclesChanged(previous, newOracles);
     }
 
+    function setRate(uint256 newRate) external onlyOracles {
+        _rate = newRate;
+    }
+
     function submitRewards(address account, uint256 amount) external onlyOracles {
         _mint(account, amount);
         emit RewardsUpdated(account, balanceOf(account));
+    }
+
+    function rewardsRate() external view returns (uint256) {
+        return _rate;
     }
 
     function redeem(uint256 amount) external payable nonReentrant {
