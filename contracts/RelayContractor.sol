@@ -15,7 +15,7 @@ contract RelayContractor is IRelayContractor, Initializable, OwnableUnset {
     uint256 private _fee;
     address private _oracles;
     mapping(address => uint256) private _quotaUsed;
-    mapping(bytes32 => address) private _transactions;
+    mapping(bytes32 => bool) private _processedTransaction;
 
     modifier onlyOracles() {
         require(msg.sender == _oracles, "Not oracle");
@@ -64,18 +64,15 @@ contract RelayContractor is IRelayContractor, Initializable, OwnableUnset {
         used = _quotaUsed[profile];
     }
 
-    function execute(address profile, bytes32 transaction) external onlyOwner {
-        require(_transactions[transaction] == address(0), "Already executed");
-        _transactions[transaction] = profile;
-        emit Executed(profile, transaction);
-    }
-
-    function submitUsage(bytes32 transaction, uint256 used) external onlyOracles {
-        address profile = _transactions[transaction];
-        require(profile != address(0), "Invalid transaction");
+    function submitUsage(
+        address profile,
+        bytes32 transaction,
+        uint256 used
+    ) external onlyOracles {
+        require(_processedTransaction[transaction] == false, "Already processed");
+        _processedTransaction[transaction] = true;
         uint256 serviceFee = (used * _fee) / _BASIS_POINTS;
         _quotaUsed[profile] += used;
-        _rewardToken.transferFrom(profile, owner(), used + serviceFee);
-        delete _transactions[transaction];
+        require(_rewardToken.transferFrom(profile, owner(), used + serviceFee), "Did not transfer");
     }
 }

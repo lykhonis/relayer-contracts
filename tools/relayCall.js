@@ -51,7 +51,7 @@ const main = async () => {
   const profileContract = new ethers.Contract(process.env.PROFILE_ADDRESS, UniversalProfile.abi, controller)
   const keyManagerContract = new ethers.Contract(process.env.KEYMANAGER_ADDRESS, LSP6KeyManager.abi, controller)
 
-  const relayContractAddress = '0x924d83cbe940D7428Da125394E1978D18d037432'
+  const relayContractAddress = '0xaADc956AE59407278A08079773E30D4402f4FA3e'
 
   // approve spending
   // await keyManagerContract.execute(
@@ -64,7 +64,7 @@ const main = async () => {
   //         'approve',
   //         [
   //           relayContractAddress,
-  //           ethers.utils.parseEther('5'),
+  //           ethers.utils.parseEther('10'),
   //         ],
   //       ),
   //     ],
@@ -78,7 +78,7 @@ const main = async () => {
     relayContractAddress,
   ))}`)
 
-  const { signature, nonce, data } = await encodeRelayCall(
+  const { signature, nonce, data: abi } = await encodeRelayCall(
     keyManagerContract,
     controller,
     profileContract.interface.encodeFunctionData('execute(uint256,address,uint256,bytes)',
@@ -94,6 +94,7 @@ const main = async () => {
     ),
   )
 
+  // const response = await fetch('https://relayer-frontend.vercel.app/api/execute', {
   const response = await fetch('http://localhost:3000/api/execute', {
     method: 'POST',
     headers: {
@@ -102,7 +103,7 @@ const main = async () => {
     body: JSON.stringify({
       keyManagerAddress: keyManagerContract.address,
       transaction: {
-        abi: data,
+        abi,
         nonce,
         signature,
       },
@@ -110,6 +111,7 @@ const main = async () => {
   })
 
   console.log(`${response?.status}: ${response?.statusText}`)
+  console.log(await response?.json())
 }
 
 main().catch((e) => {

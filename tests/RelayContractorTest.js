@@ -94,7 +94,7 @@ describe('RelayContractor', () => {
       .to.be.revertedWith('not the owner')
   })
 
-  it('should execute and spend', async () => {
+  it('should submit usage', async () => {
     await approveRewardTokens(ethers.utils.parseEther('3.33'))
     expect(await contract.quota(aliceProfile.address)).to.be.deep.eq([
       ethers.utils.parseEther('0'),
@@ -110,10 +110,7 @@ describe('RelayContractor', () => {
     const ownerBalanceStart = await rewardTokenContract.balanceOf(owner.address)
     const transactionHash = ethers.utils.hexValue(ethers.utils.randomBytes(32))
 
-    await expect(contract.connect(owner).execute(aliceProfile.address, transactionHash))
-      .to.emit(contract, 'Executed').withArgs(aliceProfile.address, transactionHash)
-
-    await contract.connect(oracles).submitUsage(transactionHash, ethers.utils.parseEther('0.02'))
+    await contract.connect(oracles).submitUsage(aliceProfile.address, transactionHash, ethers.utils.parseEther('0.02'))
 
     const spend = ethers.utils.parseEther('0.02')
       .add(ethers.utils.parseEther('0.02').mul(fee).div(basisPoints))

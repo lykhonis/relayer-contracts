@@ -58,4 +58,4 @@ OWNER_KEY=[Owner-Private-Key]
 | ---- | ----------- | ------- |
 | l16 | StakedToken | 0x8B7a2d88c47ec68E34Fad73D33F94d281Ef073ce |
 | l16 | RewardToken | 0x07eE2b1135654dC9b83eF72EEA15d1C32C902dD4 |
-| l16 | RelayContractor | 0x924d83cbe940D7428Da125394E1978D18d037432 |
+| l16 | RelayContractor | 0xaADc956AE59407278A08079773E30D4402f4FA3e |
